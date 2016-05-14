@@ -1,39 +1,34 @@
 package com.loono.android.moviestage;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class ImageAdapter extends BaseAdapter{
     private Context context;
 
-    // references to our images
-    private Integer[] mThumbIds = {
-            R.drawable.sample_2, R.drawable.sample_3,
-            R.drawable.sample_4, R.drawable.sample_5,
-            R.drawable.sample_6, R.drawable.sample_7,
-            R.drawable.sample_0, R.drawable.sample_1,
-            R.drawable.sample_2, R.drawable.sample_3,
-            R.drawable.sample_4, R.drawable.sample_5,
-            R.drawable.sample_6, R.drawable.sample_7,
-            R.drawable.sample_0, R.drawable.sample_1,
-            R.drawable.sample_2, R.drawable.sample_3,
-            R.drawable.sample_4, R.drawable.sample_5,
-            R.drawable.sample_6, R.drawable.sample_7
-    };
-
     public ImageAdapter(Context context) {
         this.context = context;
+        new GetSelectedMovies().execute("");
     }
 
     @Override
     public int getCount() {
-        return mThumbIds.length;
+        return 12;
     }
 
     @Override
@@ -51,14 +46,41 @@ public class ImageAdapter extends BaseAdapter{
         ImageView imageView;
         if (convertView == null) {
             imageView = new ImageView(context);
-            imageView.setPadding(8, 8, 8, 8);
         } else {
             imageView = (ImageView) convertView;
         }
 
 //        imageView.setImageResource(mThumbIds[position]);
-        Picasso.with(context).load("http://image.tmdb.org/t/p/w185/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg")
+        Picasso.with(context).load("http://image.tmdb.org/t/p/w500/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg")
                 .into(imageView);
         return imageView;
+    }
+
+    private class GetSelectedMovies extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String res = null;
+            try {
+                File file = new File("APIkey");
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                String key = br.readLine();
+                URL url = new URL("http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key="+key);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
+                InputStreamReader inputStream = new InputStreamReader(connection.getInputStream());
+                char[] buffer = new char[1024];
+                inputStream.read(buffer);
+                res = new String(buffer);
+            } catch (Exception exception) {
+                Log.e("inback", exception.toString());
+            }
+            return res;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            String res = result;
+        }
     }
 }
